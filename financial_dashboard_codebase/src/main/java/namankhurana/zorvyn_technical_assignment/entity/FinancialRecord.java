@@ -1,8 +1,7 @@
 package namankhurana.zorvyn_technical_assignment.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import namankhurana.zorvyn_technical_assignment.enums.RecordTypeEnum;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -13,6 +12,9 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "financial_records")
 public class FinancialRecord {
 
@@ -29,7 +31,7 @@ public class FinancialRecord {
     private RecordTypeEnum type;
 
     @Column(name = "category")
-    private String Category;
+    private String category;
 
     @Column(name = "description")
     private String description;
@@ -39,7 +41,7 @@ public class FinancialRecord {
 
     @CreationTimestamp
     @Column(name = "created_at",updatable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
