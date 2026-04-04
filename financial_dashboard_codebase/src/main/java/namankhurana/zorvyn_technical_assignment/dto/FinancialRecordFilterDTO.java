@@ -1,22 +1,23 @@
 package namankhurana.zorvyn_technical_assignment.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import namankhurana.zorvyn_technical_assignment.enums.CategoryEnum;
 import namankhurana.zorvyn_technical_assignment.enums.RecordTypeEnum;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-
-@Builder
 @Getter
 @Setter
-public class FinancialRecordRequestDTO {
-    private BigDecimal amount;
-    private RecordTypeEnum type;
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FinancialRecordFilterDTO {
+
+    private LocalDate startDate;
+    private LocalDate endDate;
     private CategoryEnum category;
-    private String description;
-    private LocalDate recordDate;
+    private RecordTypeEnum type;
+    private BigDecimal minAmount;
+    private BigDecimal maxAmount;
 }

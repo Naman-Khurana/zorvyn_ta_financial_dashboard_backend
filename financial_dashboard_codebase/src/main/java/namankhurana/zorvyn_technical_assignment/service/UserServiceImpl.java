@@ -1,5 +1,6 @@
 package namankhurana.zorvyn_technical_assignment.service;
 
+import namankhurana.zorvyn_technical_assignment.dto.entity.UserDTO;
 import namankhurana.zorvyn_technical_assignment.entity.User;
 import namankhurana.zorvyn_technical_assignment.exception.UserNotFoundException;
 import namankhurana.zorvyn_technical_assignment.repository.UserRepository;
@@ -34,4 +35,8 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(getCurrentUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
+
+//    public UserDTO createUser(){
+//
+//    }
 }

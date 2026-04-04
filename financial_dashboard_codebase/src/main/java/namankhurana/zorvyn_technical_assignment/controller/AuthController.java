@@ -25,12 +25,7 @@ public class AuthController {
     }
 
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterUserDTO userDetails) {
-        authService.registerUser(userDetails);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("User Created Successfully.");
-    }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) throws Exception {

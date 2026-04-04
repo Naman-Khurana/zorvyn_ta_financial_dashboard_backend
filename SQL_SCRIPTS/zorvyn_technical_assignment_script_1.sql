@@ -34,14 +34,10 @@ CREATE TABLE financial_records (
     type ENUM('INCOME', 'EXPENSE') NOT NULL,
     category VARCHAR(100),
     record_date DATE NOT NULL,
-	desc VARCHAR(255),
-    user_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
-    CONSTRAINT fk_record_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
+
 );
 
 INSERT INTO roles (name) VALUES

@@ -46,22 +46,22 @@ public class User {
     private Role role;
 
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<FinancialRecord> financialRecords;
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    private List<FinancialRecord> financialRecords;
 
 
     //convenience Bi-Directional methods
 
     //for FinancialRecords
-    public void addFinancialRecord(FinancialRecord newFinanacialRecord){
-        if(financialRecords==null)
-            financialRecords=new ArrayList<>();
-        // add to user
-        financialRecords.add(newFinanacialRecord);
-
-        // add to financial record
-        newFinanacialRecord.setUser(this);
-    }
+//    public void addFinancialRecord(FinancialRecord newFinanacialRecord){
+//        if(financialRecords==null)
+//            financialRecords=new ArrayList<>();
+//        // add to user
+//        financialRecords.add(newFinanacialRecord);
+//
+//        // add to financial record
+//        newFinanacialRecord.setUser(this);
+//    }
 
 
 }

@@ -16,7 +16,6 @@ public interface FinancialRecordMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     void updateFinancialRecordFromDTO(FinancialRecordRequestDTO requestDTO,@MappingTarget FinancialRecord entity);
 

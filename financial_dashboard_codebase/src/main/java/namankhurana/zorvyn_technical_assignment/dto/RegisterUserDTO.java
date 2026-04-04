@@ -1,5 +1,7 @@
 package namankhurana.zorvyn_technical_assignment.dto;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -7,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import namankhurana.zorvyn_technical_assignment.enums.RolesEnum;
 
 @Getter
 @Setter
@@ -22,5 +25,7 @@ public class RegisterUserDTO {
 
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
+
+    private RolesEnum role;
 }
 

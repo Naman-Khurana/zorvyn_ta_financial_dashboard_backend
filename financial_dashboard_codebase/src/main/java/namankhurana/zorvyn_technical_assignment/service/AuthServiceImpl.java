@@ -7,57 +7,59 @@ import namankhurana.zorvyn_technical_assignment.dto.entity.UserDTO;
 import namankhurana.zorvyn_technical_assignment.entity.Role;
 import namankhurana.zorvyn_technical_assignment.entity.User;
 import namankhurana.zorvyn_technical_assignment.enums.RolesEnum;
+import namankhurana.zorvyn_technical_assignment.exception.BadRequestException;
 import namankhurana.zorvyn_technical_assignment.exception.EmailAlreadyExistsException;
 import namankhurana.zorvyn_technical_assignment.exception.ForbiddenResourceException;
 import namankhurana.zorvyn_technical_assignment.exception.UserNotFoundException;
-import namankhurana.zorvyn_technical_assignment.mapper.RegisterUserMapper;
 import namankhurana.zorvyn_technical_assignment.mapper.UserMapper;
 import namankhurana.zorvyn_technical_assignment.repository.RoleRepository;
 import namankhurana.zorvyn_technical_assignment.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final RegisterUserMapper registerUserMapper;
+
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserService userService;
     private final RoleRepository roleRepository;
 
     @Autowired
-    public AuthServiceImpl(RegisterUserMapper registerUserMapper, UserRepository userRepository, UserMapper userMapper, RoleRepository roleRepository) {
-        this.registerUserMapper = registerUserMapper;
+    public AuthServiceImpl( UserRepository userRepository, UserMapper userMapper, UserService userService, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.userService = userService;
         this.roleRepository = roleRepository;
     }
 
 
-
-
-
-
     @Override
     @Transactional
-    public User registerUser(RegisterUserDTO registerUserDTO) {
+    public UserDTO registerUser(RegisterUserDTO registerUserDTO) {
 
-        if(userRepository.existsByEmail(registerUserDTO.getEmail())){
+        //access check
+        User loggedInUser = userService.getLoggedInUser();
+        checkAdmin(loggedInUser);
+
+        if (userRepository.existsByEmail(registerUserDTO.getEmail())) {
             throw new EmailAlreadyExistsException("Email is already registered");
         }
 
-        User newUser = registerUserMapper.toUser(registerUserDTO);
+        // default role -> Viewer
+        RolesEnum finalRole = (registerUserDTO.getRole() == null ? RolesEnum.VIEWER : registerUserDTO.getRole());
+
+        User newUser = userMapper.toUser(registerUserDTO);
         newUser.setActive(true);
 
-        Role defaultRole = roleRepository.findByName(RolesEnum.VIEWER)
-                .orElseThrow(() -> new RuntimeException("Role not configured"));
+        Role defaultRole = roleRepository.findByName(finalRole)
+                .orElseThrow(() -> new BadRequestException("Invalid Role : " + finalRole.getValue()));
 
         newUser.setRole(defaultRole);
         userRepository.save(newUser);
 
-        return null;
+        return userMapper.toDto(newUser);
 
 
     }
@@ -67,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
     public UserDTO loginUser(LoginDTO loginDTO) {
         //TODO : add JWT authentication here
 
-        User authenticatedUser = userRepository.findByEmail(loginDTO.getEmail()).orElseThrow(()-> {
+        User authenticatedUser = userRepository.findByEmail(loginDTO.getEmail()).orElseThrow(() -> {
             throw new UserNotFoundException("User not found with entered email.");
         });
 
@@ -82,18 +84,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-
     @Override
-    // if not admin and user itself ->  forbidden
-    public void checkOwnerOrAdmin(User currentUser, Long ownerId) {
+    // if not admin or analyst itself ->  forbidden
+    public void checkAnalystOrAdmin(User currentUser, Long ownerId) {
         boolean isAdmin = currentUser.getRole().getName() == RolesEnum.ADMIN;
-        boolean isOwner = Objects.equals(ownerId, currentUser.getId());
+        boolean isAnalyst = currentUser.getRole().getName() == RolesEnum.ANALYST;
 
-        if (!isAdmin && !isOwner) {
+        if (!isAdmin && !isAnalyst) {
             throw new ForbiddenResourceException("User not allowed to access this resource");
         }
     }
-
 
 
 }
