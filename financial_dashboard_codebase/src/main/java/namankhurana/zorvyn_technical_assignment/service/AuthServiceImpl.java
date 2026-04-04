@@ -25,40 +25,43 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final UserService userService;
     private final RoleRepository roleRepository;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public AuthServiceImpl( UserRepository userRepository, UserMapper userMapper, UserService userService, RoleRepository roleRepository) {
+    public AuthServiceImpl(UserRepository userRepository, UserMapper userMapper, UserService userService, RoleRepository roleRepository, AuthorizationService authorizationService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.userService = userService;
         this.roleRepository = roleRepository;
+        this.authorizationService = authorizationService;
     }
 
 
     @Override
     @Transactional
-    public UserDTO registerUser(RegisterUserDTO registerUserDTO) {
+    public UserDTO createUser(RegisterUserDTO registerUserDTO) {
 
-        //access check
+        //access check -> admin only
         User loggedInUser = userService.getLoggedInUser();
-        checkAdmin(loggedInUser);
+        authorizationService.checkAdmin(loggedInUser);
 
         if (userRepository.existsByEmail(registerUserDTO.getEmail())) {
             throw new EmailAlreadyExistsException("Email is already registered");
         }
 
+        // store email in lowercase
+        registerUserDTO.setEmail(registerUserDTO.getEmail().toLowerCase().trim());
         // default role -> Viewer
-        RolesEnum finalRole = (registerUserDTO.getRole() == null ? RolesEnum.VIEWER : registerUserDTO.getRole());
+        RolesEnum roleOrSetDefaultViewer = (registerUserDTO.getRole() == null ? RolesEnum.VIEWER
+                : registerUserDTO.getRole());
+        Role finalRole = roleRepository.findByName(roleOrSetDefaultViewer)
+                .orElseThrow(() -> new BadRequestException("Invalid Role : " + roleOrSetDefaultViewer.getValue()));
 
         User newUser = userMapper.toUser(registerUserDTO);
+        newUser.setRole(finalRole);
         newUser.setActive(true);
 
-        Role defaultRole = roleRepository.findByName(finalRole)
-                .orElseThrow(() -> new BadRequestException("Invalid Role : " + finalRole.getValue()));
-
-        newUser.setRole(defaultRole);
         userRepository.save(newUser);
-
         return userMapper.toDto(newUser);
 
 
@@ -76,24 +79,7 @@ public class AuthServiceImpl implements AuthService {
         return userMapper.toDto(authenticatedUser);
     }
 
-    @Override
-    public void checkAdmin(User user) {
-        if (user.getRole().getName() != RolesEnum.ADMIN) {
-            throw new ForbiddenResourceException("Admin access required");
-        }
-    }
 
-
-    @Override
-    // if not admin or analyst itself ->  forbidden
-    public void checkAnalystOrAdmin(User currentUser, Long ownerId) {
-        boolean isAdmin = currentUser.getRole().getName() == RolesEnum.ADMIN;
-        boolean isAnalyst = currentUser.getRole().getName() == RolesEnum.ANALYST;
-
-        if (!isAdmin && !isAnalyst) {
-            throw new ForbiddenResourceException("User not allowed to access this resource");
-        }
-    }
 
 
 }

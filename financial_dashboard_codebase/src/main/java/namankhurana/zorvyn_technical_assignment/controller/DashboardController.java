@@ -65,5 +65,4 @@ public class DashboardController {
                 .body(dashboardService.getTrends(type,n));
     }
 
-
 }

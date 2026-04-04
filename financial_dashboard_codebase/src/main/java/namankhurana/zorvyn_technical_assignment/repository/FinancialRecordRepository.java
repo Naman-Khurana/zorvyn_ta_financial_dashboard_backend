@@ -16,7 +16,6 @@ import java.util.List;
 public interface FinancialRecordRepository extends
         JpaRepository<FinancialRecord, Long>
         , JpaSpecificationExecutor<FinancialRecord> {
-    List<FinancialRecord> findByUserId(Long userId);
 
     @Query("""
             SELECT COALESCE(SUM(r.amount), 0)
@@ -39,7 +38,7 @@ public interface FinancialRecordRepository extends
     List<CategoryWiseRecordDTO> getCategorySummary();
 
     @Query("""
-            SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendDTO(
+            SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendsDTO(
                 CONCAT(YEAR(r.recordDate), '-', MONTH(r.recordDate)),
                 SUM(CASE WHEN r.type = 'INCOME' THEN r.amount ELSE 0 END),
                 SUM(CASE WHEN r.type = 'EXPENSE' THEN r.amount ELSE 0 END)
@@ -52,7 +51,7 @@ public interface FinancialRecordRepository extends
     List<TrendsDTO> getMonthlyTrends(Pageable pageable);
 
     @Query("""
-            SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendDTO(
+            SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendsDTO(
                 CONCAT(YEAR(r.recordDate), '-W', WEEK(r.recordDate)),
                 SUM(CASE WHEN r.type = 'INCOME' THEN r.amount ELSE 0 END),
                 SUM(CASE WHEN r.type = 'EXPENSE' THEN r.amount ELSE 0 END)

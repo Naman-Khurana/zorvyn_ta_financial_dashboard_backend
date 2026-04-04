@@ -1,22 +1,21 @@
-package namankhurana.zorvyn_technical_assignment.dto.entity;
+package namankhurana.zorvyn_technical_assignment.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import namankhurana.zorvyn_technical_assignment.entity.Role;
 import namankhurana.zorvyn_technical_assignment.enums.RolesEnum;
 
 import java.time.LocalDateTime;
 
 
-@Builder
 @Getter
 @Setter
-public class UserDTO {
-    private Long id;
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class UpdateUserDTO {
     private String name;
     private String email;
     private Boolean active;
     private RolesEnum role;
-    private LocalDateTime createdAt;
+    private String password;
 }

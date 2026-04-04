@@ -26,16 +26,14 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     private final FinancialRecordMapper financialRecordMapper;
     private final FinancialRecordRepository financialRecordRepository;
     private final UserService userService;
-    private final UserRepository userRepository;
-    private final AuthService authService;
+    private final AuthorizationService authorizationService;
 
     @Autowired
-    public FinancialRecordServiceImpl(FinancialRecordMapper financialRecordMapper, FinancialRecordRepository financialRecordRepository, UserService userService, UserRepository userRepository, AuthService authService) {
+    public FinancialRecordServiceImpl(FinancialRecordMapper financialRecordMapper, FinancialRecordRepository financialRecordRepository, UserService userService, UserRepository userRepository, AuthService authService, AuthorizationService authorizationService) {
         this.financialRecordMapper = financialRecordMapper;
         this.financialRecordRepository = financialRecordRepository;
         this.userService = userService;
-        this.userRepository = userRepository;
-        this.authService = authService;
+        this.authorizationService = authorizationService;
     }
 
     @Override
@@ -43,7 +41,7 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     public FinancialRecordDTO createRecord(CreateFinancialRecordDTO createFinancialRecordDTO) {
 
         User user = userService.getLoggedInUser();
-        authService.checkAdmin(user);
+        authorizationService.checkAdmin(user);
 
         // convert to Entity ->  store in db -> return DTO
         FinancialRecord record = financialRecordMapper.toEntity(createFinancialRecordDTO);
@@ -63,6 +61,7 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     }
 
 
+
     @Override
     public List<FinancialRecordDTO> getAllRecords() {
 
@@ -77,7 +76,7 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     public FinancialRecordDTO updateRecord(FinancialRecordRequestDTO requestDTO, long recordId) {
 
         User user = userService.getLoggedInUser();
-        authService.checkAdmin(user);
+        authorizationService.checkAdmin(user);
 
         FinancialRecord record = financialRecordRepository.findById(recordId).orElseThrow(() ->
                 new ResourceNotFoundException("Record not found for ID : " + recordId)
@@ -92,7 +91,7 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     @Override
     public void deleteRecord(Long recordId) {
         User user = userService.getLoggedInUser();
-        authService.checkAdmin(user);
+        authorizationService.checkAdmin(user);
 
         if (financialRecordRepository.existsById(recordId)) {
             throw new ResourceNotFoundException("Record not found for ID : " + recordId);

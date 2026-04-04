@@ -16,5 +16,10 @@ public class CategoryWiseRecordDTO {
     private CategoryEnum category;
     private RecordTypeEnum type;
     private BigDecimal totalAmount;
+
+    public CategoryWiseRecordDTO(CategoryEnum category, BigDecimal totalAmount) {
+        this.category = category;
+        this.totalAmount = totalAmount;
+    }
 }
 
