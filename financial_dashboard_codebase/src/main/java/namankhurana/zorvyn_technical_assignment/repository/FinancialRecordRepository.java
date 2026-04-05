@@ -37,29 +37,31 @@ public interface FinancialRecordRepository extends
             """)
     List<CategoryWiseRecordDTO> getCategorySummary();
 
-    @Query("""
-            SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendsDTO(
-                CONCAT(YEAR(r.recordDate), '-', MONTH(r.recordDate)),
-                SUM(CASE WHEN r.type = 'INCOME' THEN r.amount ELSE 0 END),
-                SUM(CASE WHEN r.type = 'EXPENSE' THEN r.amount ELSE 0 END)
-            )
-            FROM FinancialRecord r
-            WHERE r.deleted = false
-            GROUP BY YEAR(r.recordDate), MONTH(r.recordDate)
-            ORDER BY YEAR(r.recordDate) DESC, MONTH(r.recordDate) DESC
-            """)
-    List<TrendsDTO> getMonthlyTrends(Pageable pageable);
 
     @Query("""
-            SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendsDTO(
-                CONCAT(YEAR(r.recordDate), '-W', WEEK(r.recordDate)),
-                SUM(CASE WHEN r.type = 'INCOME' THEN r.amount ELSE 0 END),
-                SUM(CASE WHEN r.type = 'EXPENSE' THEN r.amount ELSE 0 END)
-            )
-            FROM FinancialRecord r
-            WHERE r.deleted = false
-            GROUP BY YEAR(r.recordDate), WEEK(r.recordDate)
-            ORDER BY YEAR(r.recordDate) DESC, WEEK(r.recordDate) DESC
-            """)
+        SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendsDTO(
+            CONCAT(YEAR(r.recordDate), '-', MONTH(r.recordDate)),
+            SUM(CASE WHEN r.type = 'INCOME' THEN r.amount ELSE 0 END),
+            SUM(CASE WHEN r.type = 'EXPENSE' THEN r.amount ELSE 0 END)
+        )
+        FROM FinancialRecord r
+        WHERE r.deleted = false
+        GROUP BY CONCAT(YEAR(r.recordDate), '-', MONTH(r.recordDate))
+        ORDER BY CONCAT(YEAR(r.recordDate), '-', MONTH(r.recordDate)) DESC
+        """)
+    List<TrendsDTO> getMonthlyTrends(Pageable pageable);
+
+
+    @Query("""
+        SELECT new namankhurana.zorvyn_technical_assignment.dto.TrendsDTO(
+            CONCAT(YEAR(r.recordDate), '-W', WEEK(r.recordDate)),
+            SUM(CASE WHEN r.type = 'INCOME' THEN r.amount ELSE 0 END),
+            SUM(CASE WHEN r.type = 'EXPENSE' THEN r.amount ELSE 0 END)
+        )
+        FROM FinancialRecord r
+        WHERE r.deleted = false
+        GROUP BY CONCAT(YEAR(r.recordDate), '-W', WEEK(r.recordDate))
+        ORDER BY CONCAT(YEAR(r.recordDate), '-W', WEEK(r.recordDate)) DESC
+        """)
     List<TrendsDTO> getWeeklyTrends(Pageable pageable);
 }

@@ -4,6 +4,7 @@ import namankhurana.zorvyn_technical_assignment.dto.CategoryWiseRecordDTO;
 import namankhurana.zorvyn_technical_assignment.dto.DashboardSummaryDTO;
 import namankhurana.zorvyn_technical_assignment.dto.TrendsDTO;
 import namankhurana.zorvyn_technical_assignment.dto.entity.FinancialRecordDTO;
+import namankhurana.zorvyn_technical_assignment.enums.CategoryEnum;
 import namankhurana.zorvyn_technical_assignment.enums.DashboardSummaryTypeEnum;
 import namankhurana.zorvyn_technical_assignment.enums.RecordTypeEnum;
 import namankhurana.zorvyn_technical_assignment.enums.TrendTypeEnum;
@@ -17,8 +18,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardServiceImpl implements DashboardService {
@@ -72,12 +76,30 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public List<CategoryWiseRecordDTO> getCategoryWiseTotal() {
 
-        // add type attribute
-        return financialRecordRepository.getCategorySummary()
-                .stream()
-                .peek(dto -> {
-                    dto.setType(dto.getCategory().getType());
-                }).toList();
+
+        Map<CategoryEnum, BigDecimal> categoryWiseTotals =
+                financialRecordRepository.getCategorySummary()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                CategoryWiseRecordDTO::getCategory,
+                                CategoryWiseRecordDTO::getTotalAmount
+                        ));
+
+
+
+
+        return Arrays.stream(CategoryEnum.values())
+                .map(category -> {
+                    BigDecimal amount = categoryWiseTotals.getOrDefault(category, BigDecimal.ZERO);
+
+                    CategoryWiseRecordDTO dto =
+                            new CategoryWiseRecordDTO(category, amount);
+
+                    dto.setType(category.getType());
+
+                    return dto;
+                })
+                .toList();
 
     }
 

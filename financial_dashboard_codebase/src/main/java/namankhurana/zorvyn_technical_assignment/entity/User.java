@@ -2,21 +2,18 @@ package namankhurana.zorvyn_technical_assignment.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 
 @Entity
 @Getter
 @Setter
 @Table(name = "users")
 @Builder
-public class User {
+@AllArgsConstructor
+@NoArgsConstructor
+public class User  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,23 +42,6 @@ public class User {
     @JoinColumn(name = "role_id")
     private Role role;
 
-
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//    private List<FinancialRecord> financialRecords;
-
-
-    //convenience Bi-Directional methods
-
-    //for FinancialRecords
-//    public void addFinancialRecord(FinancialRecord newFinanacialRecord){
-//        if(financialRecords==null)
-//            financialRecords=new ArrayList<>();
-//        // add to user
-//        financialRecords.add(newFinanacialRecord);
-//
-//        // add to financial record
-//        newFinanacialRecord.setUser(this);
-//    }
 
 
 }

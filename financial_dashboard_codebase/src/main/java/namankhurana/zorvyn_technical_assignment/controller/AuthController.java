@@ -2,6 +2,7 @@ package namankhurana.zorvyn_technical_assignment.controller;
 
 import jakarta.validation.Valid;
 import namankhurana.zorvyn_technical_assignment.dto.LoginDTO;
+import namankhurana.zorvyn_technical_assignment.dto.LoginResponse;
 import namankhurana.zorvyn_technical_assignment.dto.RegisterUserDTO;
 import namankhurana.zorvyn_technical_assignment.dto.entity.UserDTO;
 import namankhurana.zorvyn_technical_assignment.service.AuthService;
@@ -25,12 +26,10 @@ public class AuthController {
     }
 
 
-
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) throws Exception {
-        UserDTO user = authService.loginUser(loginDTO);
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginDTO loginDTO) throws Exception {
+        LoginResponse response = authService.loginUser(loginDTO);
         return ResponseEntity.ok()
-                .body(user);
+                .body(response);
     }
 }
