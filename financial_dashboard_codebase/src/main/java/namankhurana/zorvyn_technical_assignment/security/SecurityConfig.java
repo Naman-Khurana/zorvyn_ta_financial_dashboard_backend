@@ -1,5 +1,6 @@
 package namankhurana.zorvyn_technical_assignment.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -31,9 +32,14 @@ import java.util.List;
 public class SecurityConfig {
 
     private final AuthTokenFilter authTokenFilter;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    public SecurityConfig(AuthTokenFilter authTokenFilter) {
+    @Autowired
+    public SecurityConfig(AuthTokenFilter authTokenFilter, CustomAccessDeniedHandler customAccessDeniedHandler, JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.authTokenFilter = authTokenFilter;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
 
@@ -48,6 +54,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .sessionManagement(session-> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //TODO : add exceptiono handler here for jwt related errors
                 .csrf(AbstractHttpConfigurer::disable)

@@ -39,25 +39,34 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader=request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization");
 
-        if(authHeader==null || !authHeader.startsWith("Bearer ")){
-            filterChain.doFilter(request,response);
-            return;
-        }
 
         try {
 
-            final String jwt=authHeader.substring(7);
-            final String userId =jwtService.extractUsername(jwt);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                if (authHeader == null) {
+                    request.setAttribute("jwt_error", "JWT token is missing");
+                }
 
-            Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
+                else if (!authHeader.startsWith("Bearer ")) {
+                    request.setAttribute("jwt_error", "Invalid Authorization header");
+                }
 
-            if(userId !=null && authentication==null){
-                UserDetails userDetails=this.userDetailsService.loadUserById(userId);
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-                if(jwtService.isTokenValid(jwt,userDetails)){
-                    UsernamePasswordAuthenticationToken authenticationToken=new UsernamePasswordAuthenticationToken(
+            final String jwt = authHeader.substring(7);
+            final String userId = jwtService.extractUsername(jwt);
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (userId != null && authentication == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserById(userId);
+
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
@@ -68,11 +77,21 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 }
             }
 
-            filterChain.doFilter(request,response);
+            filterChain.doFilter(request, response);
 
 
+        } catch (ExpiredJwtException e) {
+            request.setAttribute("jwt_error", "JWT token has expired");
+            filterChain.doFilter(request, response);
+        } catch (SignatureException e) {
+            request.setAttribute("jwt_error", "Invalid JWT signature");
+            filterChain.doFilter(request, response);
+        } catch (JwtException e) {
+            request.setAttribute("jwt_error", "Invalid JWT token");
+            filterChain.doFilter(request, response);
         } catch (Exception e) {
-            logger.error("Cannot set user authentication:"+ e);
+            request.setAttribute("jwt_error", "Authentication failed");
+            filterChain.doFilter(request, response);
         }
 
 

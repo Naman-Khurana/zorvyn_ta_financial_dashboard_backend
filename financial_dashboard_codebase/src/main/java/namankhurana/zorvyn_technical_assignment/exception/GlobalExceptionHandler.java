@@ -22,6 +22,8 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.LocalDateTime;
 
+import static namankhurana.zorvyn_technical_assignment.exception.ExceptionUtil.buildResponse;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -112,59 +114,59 @@ public class GlobalExceptionHandler {
 
     //JWT EXCEPTIONS
 
-    @ExceptionHandler({
-            BadCredentialsException.class,
-            AccountStatusException.class,
-            AccessDeniedException.class,
-            SignatureException.class,
-            ExpiredJwtException.class,
-            JwtException.class,
-            AuthenticationException.class
-    })
-    public ResponseEntity<ErrorResponse> handleSecurityException(
-            Exception exception,
-            HttpServletRequest request) {
-
-        exception.printStackTrace(); // send to logging system in production
-
-        HttpStatus status;
-        String message;
-
-        if (exception instanceof BadCredentialsException) {
-            status = HttpStatus.UNAUTHORIZED;
-            message = "Invalid username or password";
-        }
-        else if (exception instanceof AccountStatusException) {
-            status = HttpStatus.FORBIDDEN;
-            message = "Account is locked or disabled";
-        }
-        else if (exception instanceof AccessDeniedException) {
-            status = HttpStatus.FORBIDDEN;
-            message = "You do not have permission to access this resource";
-        }
-        else if (exception instanceof ExpiredJwtException) {
-            status = HttpStatus.UNAUTHORIZED;
-            message = "JWT token has expired";
-        }
-        else if (exception instanceof SignatureException) {
-            status = HttpStatus.UNAUTHORIZED;
-            message = "Invalid JWT signature";
-        }
-        else if (exception instanceof JwtException) {
-            status = HttpStatus.UNAUTHORIZED;
-            message = "Invalid JWT token";
-        }
-        else if (exception instanceof AuthenticationException) {
-            status = HttpStatus.UNAUTHORIZED;
-            message = "Authentication failed";
-        }
-        else {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            message = "Security error occurred";
-        }
-
-        return buildResponse(message, status, request);
-    }
+//    @ExceptionHandler({
+//            BadCredentialsException.class,
+//            AccountStatusException.class,
+//            AccessDeniedException.class,
+//            SignatureException.class,
+//            ExpiredJwtException.class,
+//            JwtException.class,
+//            AuthenticationException.class
+//    })
+//    public ResponseEntity<ErrorResponse> handleSecurityException(
+//            Exception exception,
+//            HttpServletRequest request) {
+//
+//        exception.printStackTrace(); // send to logging system in production
+//
+//        HttpStatus status;
+//        String message;
+//
+//        if (exception instanceof BadCredentialsException) {
+//            status = HttpStatus.UNAUTHORIZED;
+//            message = "Invalid username or password";
+//        }
+//        else if (exception instanceof AccountStatusException) {
+//            status = HttpStatus.FORBIDDEN;
+//            message = "Account is locked or disabled";
+//        }
+//        else if (exception instanceof AccessDeniedException) {
+//            status = HttpStatus.FORBIDDEN;
+//            message = "You do not have permission to access this resource";
+//        }
+//        else if (exception instanceof ExpiredJwtException) {
+//            status = HttpStatus.UNAUTHORIZED;
+//            message = "JWT token has expired";
+//        }
+//        else if (exception instanceof SignatureException) {
+//            status = HttpStatus.UNAUTHORIZED;
+//            message = "Invalid JWT signature";
+//        }
+//        else if (exception instanceof JwtException) {
+//            status = HttpStatus.UNAUTHORIZED;
+//            message = "Invalid JWT token";
+//        }
+//        else if (exception instanceof AuthenticationException) {
+//            status = HttpStatus.UNAUTHORIZED;
+//            message = "Authentication failed";
+//        }
+//        else {
+//            status = HttpStatus.INTERNAL_SERVER_ERROR;
+//            message = "Security error occurred";
+//        }
+//
+//        return buildResponse(message, status, request);
+//    }
 
 
 
@@ -187,21 +189,6 @@ public class GlobalExceptionHandler {
 
 
 
-    private ResponseEntity<ErrorResponse> buildResponse(
-            String message,
-            HttpStatus status,
-            HttpServletRequest request) {
-
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message(message)
-                .path(request.getRequestURI())
-                .build();
-
-        return new ResponseEntity<>(error, status);
-    }
 
 
 }
