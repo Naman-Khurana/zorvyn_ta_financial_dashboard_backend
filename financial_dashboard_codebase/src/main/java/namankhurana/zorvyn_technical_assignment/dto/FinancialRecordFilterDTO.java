@@ -17,6 +17,7 @@ public class FinancialRecordFilterDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private CategoryEnum category;
+
     private RecordTypeEnum type;
     private BigDecimal minAmount;
     private BigDecimal maxAmount;

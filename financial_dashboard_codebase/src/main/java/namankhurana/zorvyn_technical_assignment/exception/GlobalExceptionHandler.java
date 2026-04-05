@@ -14,6 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
@@ -23,6 +24,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+
 
 import static namankhurana.zorvyn_technical_assignment.exception.ExceptionUtil.buildResponse;
 
@@ -58,7 +61,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             BadRequestException.class,
             IllegalArgumentException.class,
-//            MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class,
             MissingPathVariableException.class
     })
@@ -105,7 +107,7 @@ public class GlobalExceptionHandler {
             errorMessage = manvEx.getBindingResult()
                     .getFieldErrors()
                     .stream()
-                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .map(error -> "Invalid value for the field : "  + error.getField() )
                     .findFirst()
                     .orElse("Validation error");
         }
@@ -135,6 +137,22 @@ public class GlobalExceptionHandler {
 
         return buildResponse(message, HttpStatus.BAD_REQUEST, request);
     }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleBindException(
+            BindException ex,
+            HttpServletRequest request) {
+
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse("Binding error");
+
+        return buildResponse(message, HttpStatus.BAD_REQUEST, request);
+    }
+
 
     // INVALID JSON
     @ExceptionHandler(HttpMessageNotReadableException.class)

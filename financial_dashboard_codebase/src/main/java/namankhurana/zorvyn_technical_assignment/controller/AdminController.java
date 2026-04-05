@@ -9,6 +9,7 @@ import namankhurana.zorvyn_technical_assignment.service.AuthService;
 import namankhurana.zorvyn_technical_assignment.service.FinancialRecordService;
 import namankhurana.zorvyn_technical_assignment.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -83,8 +84,14 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> filteredUsers(UserFilterDTO userFilterDTO, @PageableDefault(size = 10, sort = "createdAt"
-            , direction = Sort.Direction.DESC)Pageable pageable){
+    public ResponseEntity<?> filteredUsers(UserFilterDTO userFilterDTO,
+                                           @RequestParam(defaultValue = "0") Integer page,
+                                           @RequestParam(defaultValue = "10") Integer size,
+                                           @RequestParam(defaultValue = "id") String sortBy,
+                                           @RequestParam(defaultValue = "true") Boolean ascending){
+
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         return ResponseEntity.ok()
                 .body(userService.getFilteredUsersPaged(userFilterDTO,pageable));
