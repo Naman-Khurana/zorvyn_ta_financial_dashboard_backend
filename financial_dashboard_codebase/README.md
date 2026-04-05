@@ -446,39 +446,6 @@ Returns totals for **every** category (even those with zero activity):
 
 ---
 
-## 📊 Data Model
-
-### Entity Relationship Diagram
-
-```
-┌─────────────────┐       ┌─────────────────┐
-│      roles      │       │      users      │
-├─────────────────┤       ├─────────────────┤
-│ id (PK)         │◄──────│ role_id (FK)    │
-│ name (ENUM)     │       │ id (PK)         │
-│                 │       │ name            │
-│  ADMIN          │       │ email (UNIQUE)  │
-│  ANALYST        │       │ password        │
-│  VIEWER         │       │ active          │
-└─────────────────┘       │ created_at      │
-                          └─────────────────┘
-
-┌──────────────────────────┐
-│    financial_records     │
-├──────────────────────────┤
-│ id (PK)                  │
-│ amount (DECIMAL)         │
-│ type (ENUM)              │
-│ category (ENUM)          │
-│ description (TEXT)       │
-│ record_date (DATE)       │
-│ created_at (DATETIME)    │
-│ deleted (BOOLEAN)        │  ← soft delete
-└──────────────────────────┘
-```
-
----
-
 ## 📂 Categories
 
 Categories are tied to a specific record type and are validated at both the DTO and service level.
@@ -550,85 +517,17 @@ All errors return a consistent JSON structure:
 src/main/java/namankhurana/zorvyn_technical_assignment/
 │
 ├── ZorvynTechnicalAssignmentApplication.java   # Application entry point
-│
 ├── config/
-│   └── JacksonConfig.java                      # Jackson ObjectMapper configuration
-│
 ├── controller/
-│   ├── AuthController.java                     # Login endpoint
-│   ├── AdminController.java                    # User & record management (ADMIN)
-│   ├── FinancialRecordController.java          # Record read operations (ANALYST+)
-│   ├── DashboardController.java                # Analytics & summaries (VIEWER+)
-│   └── UserController.java                     # User-facing endpoints (VIEWER+)
-│
 ├── dto/
-│   ├── LoginDTO.java                           # Login request
-│   ├── LoginResponse.java                      # Login response (token + user)
-│   ├── RegisterUserDTO.java                    # User creation request
-│   ├── UpdateUserDTO.java                      # User update request
-│   ├── CreateFinancialRecordDTO.java           # Record creation request
-│   ├── FinancialRecordRequestDTO.java          # Record update request
-│   ├── FinancialRecordFilterDTO.java           # Record filter parameters
-│   ├── UserFilterDTO.java                      # User filter parameters
-│   ├── DashboardSummaryDTO.java                # Summary response (income/expense/balance)
-│   ├── CategoryWiseRecordDTO.java              # Category breakdown response
-│   ├── TrendsDTO.java                          # Trend data response
-│   ├── CreateUserResponseDTO.java              # User creation response wrapper
-│   └── entity/
-│       ├── UserDTO.java                        # User response DTO
-│       └── FinancialRecordDTO.java             # Record response DTO
-│
 ├── entity/
-│   ├── User.java                               # User JPA entity
-│   ├── Role.java                               # Role JPA entity
-│   └── FinancialRecord.java                    # Financial record entity (soft delete)
-│
 ├── enums/
-│   ├── RolesEnum.java                          # ADMIN, ANALYST, VIEWER
-│   ├── RecordTypeEnum.java                     # INCOME, EXPENSE
-│   ├── CategoryEnum.java                       # 24 categories mapped to record types
-│   ├── DashboardSummaryTypeEnum.java           # Summary type identifiers
-│   └── TrendTypeEnum.java                      # WEEKLY, MONTHLY
-│
 ├── exception/
-│   ├── GlobalExceptionHandler.java             # Centralized exception handling
-│   ├── ErrorResponse.java                      # Standard error response structure
-│   ├── ExceptionUtil.java                      # Error response builder utility
-│   ├── BadRequestException.java
-│   ├── EmailAlreadyExistsException.java
-│   ├── ForbiddenResourceException.java
-│   ├── ResourceNotFoundException.java
-│   └── UserNotFoundException.java
-│
 ├── mapper/
-│   ├── UserMapper.java                         # MapStruct: User ↔ UserDTO
-│   └── FinancialRecordMapper.java              # MapStruct: Record ↔ RecordDTO
-│
 ├── repository/
-│   ├── UserRepository.java                     # User data access
-│   ├── RoleRepository.java                     # Role data access
-│   └── FinancialRecordRepository.java          # Record data access + custom JPQL queries
-│
 ├── security/
-│   ├── SecurityConfig.java                     # Security filter chain, CORS, role hierarchy
-│   ├── AuthTokenFilter.java                    # JWT extraction & validation filter
-│   ├── JWTService.java                         # Token generation, parsing, validation
-│   ├── CustomUserDetailsService.java           # UserDetailsService implementation
-│   ├── UserPrincipal.java                      # Custom UserDetails implementation
-│   ├── CustomAuthenticationProvider.java        # Custom authentication logic
-│   ├── CustomAccessDeniedHandler.java          # 403 response handler
-│   └── JWTAuthenticationEntryPoint.java        # 401 response handler
-│
 ├── service/
-│   ├── AuthService.java / AuthServiceImpl.java
-│   ├── UserService.java / UserServiceImpl.java
-│   ├── FinancialRecordService.java / FinancialRecordServiceImpl.java
-│   ├── DashboardService.java / DashboardServiceImpl.java
-│   └── AuthorizationService.java / AuthorizationServiceImpl.java
-│
-└── specification/
-    ├── FinancialRecordSpecification.java        # Dynamic record query builder
-    └── UserSpecification.java                   # Dynamic user query builder
+└── specification/               
 ```
 
 ---
