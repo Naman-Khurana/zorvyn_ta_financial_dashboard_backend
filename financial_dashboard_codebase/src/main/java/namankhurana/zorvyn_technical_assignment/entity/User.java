@@ -3,6 +3,7 @@ package namankhurana.zorvyn_technical_assignment.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -32,9 +33,12 @@ public class User  {
     private String password;
 
     @Column(name = "active")
-    private Boolean active;
+
+    @Builder.Default
+    private Boolean active=true;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
 

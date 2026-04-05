@@ -1,8 +1,10 @@
 package namankhurana.zorvyn_technical_assignment.specification;
 
 
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import namankhurana.zorvyn_technical_assignment.dto.UserFilterDTO;
+import namankhurana.zorvyn_technical_assignment.entity.Role;
 import namankhurana.zorvyn_technical_assignment.entity.User;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -19,6 +21,8 @@ public class UserSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            Join<User, Role> roleJoin = root.join("role");
+
 
             if (filter.getMinId() != null)
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("id"), filter.getMinId()));
@@ -31,8 +35,10 @@ public class UserSpecification {
                         "%" + filter.getEmail().toLowerCase() + "%"));
 
             if (filter.getRole() != null)
-                predicates.add(criteriaBuilder.equal(root.get("role"), filter.getRole().getName()));
-
+                predicates.add(criteriaBuilder.equal(
+                        roleJoin.get("name"),
+                        filter.getRole()
+                ));
             if (filter.getMinCreationDate() != null)
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"),
                         filter.getMinCreationDate()));

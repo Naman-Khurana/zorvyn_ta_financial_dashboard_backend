@@ -37,7 +37,7 @@ public class AdminController {
 
 
     @PostMapping("/records")
-    public ResponseEntity<FinancialRecordDTO> createRecord(@RequestBody CreateFinancialRecordDTO dto) {
+    public ResponseEntity<FinancialRecordDTO> createRecord(@Valid @RequestBody CreateFinancialRecordDTO dto) {
 
         FinancialRecordDTO record = financialRecordService.createRecord(dto);
 
@@ -45,7 +45,7 @@ public class AdminController {
     }
 
     @PutMapping("/records/{recordId}")
-    public ResponseEntity<FinancialRecordDTO> updateRecord(@PathVariable Long recordId, @RequestBody
+    public ResponseEntity<FinancialRecordDTO> updateRecord(@PathVariable Long recordId,@Valid @RequestBody
     FinancialRecordRequestDTO financialRecordRequestDTO) {
 
         return ResponseEntity.ok().body(financialRecordService.updateRecord(financialRecordRequestDTO, recordId));
@@ -59,22 +59,31 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/create-user")
+    @PostMapping("/users")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterUserDTO userDetails) {
 
-        authService.createUser(userDetails);
+        UserDTO user= authService.createUser(userDetails);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("User Created Successfully.");
+                .body(CreateUserResponseDTO.builder()
+                        .response("User Created Successfully")
+                        .user(user)
+                        .build());
     }
 
-    @PutMapping("/update-user/{userId}")
-    public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO updateUserDTO, @PathVariable Long userId){
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId){
+            userService.deleteUser(userId);
+            return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/users/{userId}")
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDTO updateUserDTO, @PathVariable Long userId){
         return ResponseEntity.ok()
                 .body(userService.updateUser(updateUserDTO,userId));
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> filteredUsers(UserFilterDTO userFilterDTO, @PageableDefault(size = 10, sort = "created_at"
+    public ResponseEntity<?> filteredUsers(UserFilterDTO userFilterDTO, @PageableDefault(size = 10, sort = "createdAt"
             , direction = Sort.Direction.DESC)Pageable pageable){
 
         return ResponseEntity.ok()
@@ -82,7 +91,7 @@ public class AdminController {
 
     }
 
-    @GetMapping("/users/{userid}")
+    @GetMapping("/users/{userId}")
     public ResponseEntity<UserDTO> getUserFromID(@PathVariable Long userId){
         return ResponseEntity.ok()
                 .body(userMapper.toDto(userService.getUserFromId(userId)));

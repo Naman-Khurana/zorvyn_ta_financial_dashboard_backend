@@ -1,16 +1,19 @@
 package namankhurana.zorvyn_technical_assignment.controller;
 
+import jakarta.validation.constraints.Min;
 import namankhurana.zorvyn_technical_assignment.dto.CategoryWiseRecordDTO;
 import namankhurana.zorvyn_technical_assignment.dto.DashboardSummaryDTO;
 import namankhurana.zorvyn_technical_assignment.enums.TrendTypeEnum;
 import namankhurana.zorvyn_technical_assignment.service.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 
 import java.util.List;
 
@@ -52,7 +55,7 @@ public class DashboardController {
 
     @GetMapping("/recent-activity")
     public ResponseEntity<?> recentActivity(
-            @RequestParam(required = false) Long n
+            @RequestParam(required = false) @Min(value = 1,message = "'n' should have value of atleast 1") Long n
 
     ) {
         return ResponseEntity.ok()
@@ -62,7 +65,7 @@ public class DashboardController {
     @GetMapping("/trends")
     public ResponseEntity<?> trends(
             @RequestParam(required = false) TrendTypeEnum type,
-            @RequestParam(required = false) Integer n
+            @RequestParam(required = false) @Min(value = 1,message = "'n' should have value of atleast 1") Integer n
     )
     {
         return ResponseEntity.ok()

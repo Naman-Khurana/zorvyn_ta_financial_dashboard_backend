@@ -4,6 +4,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -17,10 +20,9 @@ import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import java.time.LocalDateTime;
 
 import static namankhurana.zorvyn_technical_assignment.exception.ExceptionUtil.buildResponse;
 
@@ -56,7 +58,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             BadRequestException.class,
             IllegalArgumentException.class,
-            MethodArgumentTypeMismatchException.class,
+//            MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class,
             MissingPathVariableException.class
     })
@@ -65,19 +67,73 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
     }
 
-    // VALIDATION ERROR
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
-                                                          HttpServletRequest request) {
 
-        String errorMessage = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation error");
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+
+        String parameterName = ex.getName();
+        String parameterValue = ex.getValue() != null ? ex.getValue().toString() : "null";
+        String requiredType = ex.getRequiredType() != null
+                ? ex.getRequiredType().getSimpleName()
+                : "unknown";
+
+        String message = String.format(
+                "Invalid value '%s' for parameter '%s'",
+                parameterValue,
+                parameterName
+        );
+
+        return buildResponse(message, HttpStatus.BAD_REQUEST, request);
+    }
+
+
+    // VALIDATION ERROR
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            ConstraintViolationException.class,
+            ValidationException.class
+    })
+    public ResponseEntity<ErrorResponse> handleValidation(
+            Exception ex,
+            HttpServletRequest request) {
+
+        String errorMessage = "Validation error";
+
+        if (ex instanceof MethodArgumentNotValidException manvEx) {
+            errorMessage = manvEx.getBindingResult()
+                    .getFieldErrors()
+                    .stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .findFirst()
+                    .orElse("Validation error");
+        }
+        else if (ex instanceof ConstraintViolationException cvEx) {
+            errorMessage = cvEx.getConstraintViolations()
+                    .stream()
+                    .map(ConstraintViolation::getMessage)
+                    .findFirst()
+                    .orElse("Invalid request parameter");
+        }
+        else {
+            errorMessage = ex.getMessage();
+        }
 
         return buildResponse(errorMessage, HttpStatus.BAD_REQUEST, request);
+    }
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> handleMethodValidation(
+            HandlerMethodValidationException ex,
+            HttpServletRequest request) {
+
+        String message = ex.getAllErrors()
+                .stream()
+                .map(error -> error.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation failed");
+
+        return buildResponse(message, HttpStatus.BAD_REQUEST, request);
     }
 
     // INVALID JSON
@@ -114,60 +170,52 @@ public class GlobalExceptionHandler {
 
     //JWT EXCEPTIONS
 
-//    @ExceptionHandler({
-//            BadCredentialsException.class,
-//            AccountStatusException.class,
-//            AccessDeniedException.class,
-//            SignatureException.class,
-//            ExpiredJwtException.class,
-//            JwtException.class,
-//            AuthenticationException.class
-//    })
-//    public ResponseEntity<ErrorResponse> handleSecurityException(
-//            Exception exception,
-//            HttpServletRequest request) {
-//
-//        exception.printStackTrace(); // send to logging system in production
-//
-//        HttpStatus status;
-//        String message;
-//
-//        if (exception instanceof BadCredentialsException) {
-//            status = HttpStatus.UNAUTHORIZED;
-//            message = "Invalid username or password";
-//        }
-//        else if (exception instanceof AccountStatusException) {
-//            status = HttpStatus.FORBIDDEN;
-//            message = "Account is locked or disabled";
-//        }
-//        else if (exception instanceof AccessDeniedException) {
-//            status = HttpStatus.FORBIDDEN;
-//            message = "You do not have permission to access this resource";
-//        }
-//        else if (exception instanceof ExpiredJwtException) {
-//            status = HttpStatus.UNAUTHORIZED;
-//            message = "JWT token has expired";
-//        }
-//        else if (exception instanceof SignatureException) {
-//            status = HttpStatus.UNAUTHORIZED;
-//            message = "Invalid JWT signature";
-//        }
-//        else if (exception instanceof JwtException) {
-//            status = HttpStatus.UNAUTHORIZED;
-//            message = "Invalid JWT token";
-//        }
-//        else if (exception instanceof AuthenticationException) {
-//            status = HttpStatus.UNAUTHORIZED;
-//            message = "Authentication failed";
-//        }
-//        else {
-//            status = HttpStatus.INTERNAL_SERVER_ERROR;
-//            message = "Security error occurred";
-//        }
-//
-//        return buildResponse(message, status, request);
-//    }
+    @ExceptionHandler({
+            BadCredentialsException.class,
+            AccountStatusException.class,
+            AccessDeniedException.class,
+            SignatureException.class,
+            ExpiredJwtException.class,
+            JwtException.class,
+            AuthenticationException.class
+    })
+    public ResponseEntity<ErrorResponse> handleSecurityException(
+            Exception exception,
+            HttpServletRequest request) {
 
+        exception.printStackTrace(); // send to logging system in production
+
+        HttpStatus status;
+        String message;
+
+        if (exception instanceof BadCredentialsException) {
+            status = HttpStatus.UNAUTHORIZED;
+            message = "Invalid username or password";
+        } else if (exception instanceof AccountStatusException) {
+            status = HttpStatus.FORBIDDEN;
+            message = "Account is locked or disabled";
+        } else if (exception instanceof AccessDeniedException) {
+            status = HttpStatus.FORBIDDEN;
+            message = "You do not have permission to access this resource";
+        } else if (exception instanceof ExpiredJwtException) {
+            status = HttpStatus.UNAUTHORIZED;
+            message = "JWT token has expired";
+        } else if (exception instanceof SignatureException) {
+            status = HttpStatus.UNAUTHORIZED;
+            message = "Invalid JWT signature";
+        } else if (exception instanceof JwtException) {
+            status = HttpStatus.UNAUTHORIZED;
+            message = "Invalid JWT token";
+        } else if (exception instanceof AuthenticationException) {
+            status = HttpStatus.UNAUTHORIZED;
+            message = "Authentication failed";
+        } else {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            message = "Security error occurred";
+        }
+
+        return buildResponse(message, status, request);
+    }
 
 
     // GENERAL EXCEPTION
@@ -176,19 +224,6 @@ public class GlobalExceptionHandler {
                                                        HttpServletRequest request) {
         return buildResponse("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

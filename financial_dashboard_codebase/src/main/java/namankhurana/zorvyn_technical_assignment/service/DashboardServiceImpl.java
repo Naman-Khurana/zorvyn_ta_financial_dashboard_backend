@@ -8,23 +8,23 @@ import namankhurana.zorvyn_technical_assignment.enums.CategoryEnum;
 import namankhurana.zorvyn_technical_assignment.enums.DashboardSummaryTypeEnum;
 import namankhurana.zorvyn_technical_assignment.enums.RecordTypeEnum;
 import namankhurana.zorvyn_technical_assignment.enums.TrendTypeEnum;
+import namankhurana.zorvyn_technical_assignment.exception.BadRequestException;
 import namankhurana.zorvyn_technical_assignment.mapper.FinancialRecordMapper;
 import namankhurana.zorvyn_technical_assignment.repository.FinancialRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.WeekFields;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Validated
 public class DashboardServiceImpl implements DashboardService {
 
     private final UserService userService;
@@ -63,7 +63,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public DashboardSummaryDTO getNetBalance() {
-        BigDecimal netBalance= financialRecordRepository.getTotalByType(RecordTypeEnum.INCOME)
+        BigDecimal netBalance = financialRecordRepository.getTotalByType(RecordTypeEnum.INCOME)
                 .subtract(financialRecordRepository.getTotalByType(RecordTypeEnum.EXPENSE));
 
         return DashboardSummaryDTO.builder()
@@ -73,6 +73,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     }
 
+    // get category wise income / earnings
     @Override
     public List<CategoryWiseRecordDTO> getCategoryWiseTotal() {
 
@@ -84,8 +85,6 @@ public class DashboardServiceImpl implements DashboardService {
                                 CategoryWiseRecordDTO::getCategory,
                                 CategoryWiseRecordDTO::getTotalAmount
                         ));
-
-
 
 
         return Arrays.stream(CategoryEnum.values())
@@ -103,8 +102,9 @@ public class DashboardServiceImpl implements DashboardService {
 
     }
 
+    // get most recent n financial records
     @Override
-    public Page<FinancialRecordDTO> getRecentNActivities(Long limit) {
+    public List<FinancialRecordDTO> getRecentNActivities(Long limit) {
         // handle limit not passed :: Default 10
         limit = (limit == null ? 10L : limit);
 
@@ -115,36 +115,69 @@ public class DashboardServiceImpl implements DashboardService {
         );
 
         return financialRecordRepository
-                .findAll(pageable).map(financialRecordMapper::toDTO);
+                .findAll(pageable).map(financialRecordMapper::toDTO)
+                .stream()
+                .toList();
 
 
     }
 
+
+    // get last n weeks / months trends (income,expenses)
     @Override
     public List<TrendsDTO> getTrends(TrendTypeEnum type, Integer maxLimit) {
 
-        // default type -> Monthly
         type = (type == null ? TrendTypeEnum.MONTHLY : type);
 
-        // default limit Monthly -> Last 12 Months , Weekly -> Last 4 Weeks
+        // default values
         if (maxLimit == null) {
             maxLimit = (type == TrendTypeEnum.MONTHLY ? 12 : 4);
         }
+        // handle n < 1
+        else if(maxLimit<1){
+            throw new BadRequestException("'n' should have value of atleast 1 ");
+        }
 
-        Pageable pageable=PageRequest.of(0,maxLimit);
 
+        // Get all aggregated data (NOT paged)
         List<TrendsDTO> trends;
-        switch (type){
-            case WEEKLY -> trends=financialRecordRepository.getWeeklyTrends(pageable);
-            case MONTHLY -> trends=financialRecordRepository.getMonthlyTrends(pageable);
+        switch (type) {
+            case WEEKLY -> trends = financialRecordRepository.getWeeklyTrends(PageRequest.of(0, maxLimit));
+            case MONTHLY -> trends = financialRecordRepository.getMonthlyTrends(PageRequest.of(0, maxLimit));
             default -> throw new IllegalArgumentException("Invalid Trend Type");
         }
 
-        // reverse since it store most recent to least recent by default
-        Collections.reverse(trends);
-        return  trends;
+        Map<String, TrendsDTO> trendsMap = trends.stream()
+                .collect(Collectors.toMap(TrendsDTO::getPeriod, t -> t));
+
+        List<TrendsDTO> finalTrends = new ArrayList<>();
+
+        if (type == TrendTypeEnum.MONTHLY) {
+            YearMonth now = YearMonth.now();
+            for (int i = 0; i < maxLimit; i++) {
+                YearMonth month = now.minusMonths(i);
+                String key = month.toString();
+                finalTrends.add(
+                        trendsMap.getOrDefault(key, new TrendsDTO(key, BigDecimal.ZERO, BigDecimal.ZERO)));
+            }
+
+        } else { // for weekly trends
+            LocalDate now = LocalDate.now();
+            for (int i = 0; i < maxLimit; i++) {
+                LocalDate weekDate = now.minusWeeks(i);
+                int week = weekDate.get(WeekFields.ISO.weekOfWeekBasedYear());
+                int year = weekDate.getYear();
+                String key = year + "-W" + week;
+
+                finalTrends.add(
+                        trendsMap.getOrDefault(key, new TrendsDTO(key, BigDecimal.ZERO, BigDecimal.ZERO)));
+            }
+        }
+
+        Collections.reverse(finalTrends);
 
 
+        return finalTrends;
     }
 
 }

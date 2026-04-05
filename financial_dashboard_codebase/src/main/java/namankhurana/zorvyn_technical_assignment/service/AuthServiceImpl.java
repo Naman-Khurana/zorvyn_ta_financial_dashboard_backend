@@ -18,8 +18,10 @@ import namankhurana.zorvyn_technical_assignment.security.JWTService;
 import namankhurana.zorvyn_technical_assignment.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,9 +35,10 @@ public class AuthServiceImpl implements AuthService {
     private final AuthorizationService authorizationService;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, UserMapper userMapper, UserService userService, RoleRepository roleRepository, AuthorizationService authorizationService, AuthenticationManager authenticationManager, JWTService jwtService) {
+    public AuthServiceImpl(UserRepository userRepository, UserMapper userMapper, UserService userService, RoleRepository roleRepository, AuthorizationService authorizationService, AuthenticationManager authenticationManager, JWTService jwtService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.userService = userService;
@@ -43,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
         this.authorizationService = authorizationService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -66,7 +70,10 @@ public class AuthServiceImpl implements AuthService {
         Role finalRole = roleRepository.findByName(roleOrSetDefaultViewer)
                 .orElseThrow(() -> new BadRequestException("Invalid Role : " + roleOrSetDefaultViewer.getValue()));
 
+
         User newUser = userMapper.toUser(registerUserDTO);
+        newUser.setPassword(passwordEncoder.encode(registerUserDTO.getPassword()));
+
         newUser.setRole(finalRole);
         newUser.setActive(true);
 
@@ -79,7 +86,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse loginUser(LoginDTO loginDTO) {
-        //TODO : add JWT authentication here
 
         Authentication authentication=authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -89,11 +95,19 @@ public class AuthServiceImpl implements AuthService {
         );
 
         UserPrincipal userPrincipal=(UserPrincipal) authentication.getPrincipal();
-        String accessToken= jwtService.generateToken(userPrincipal);
 
         User authenticatedUser = userRepository.findByEmail(loginDTO.getEmail()).orElseThrow(() -> {
             throw new UserNotFoundException("User not found with entered email.");
         });
+
+        // prevent deactivated user account access
+        if(!authenticatedUser.getActive()){
+            throw new DisabledException("User account is disabled");
+        }
+
+        String accessToken= jwtService.generateToken(userPrincipal);
+
+
 
 
 

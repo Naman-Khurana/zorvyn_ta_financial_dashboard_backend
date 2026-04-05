@@ -6,6 +6,7 @@ import namankhurana.zorvyn_technical_assignment.dto.TrendsDTO;
 import namankhurana.zorvyn_technical_assignment.dto.entity.FinancialRecordDTO;
 import namankhurana.zorvyn_technical_assignment.enums.TrendTypeEnum;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,7 +20,8 @@ public interface DashboardService {
 
     List<CategoryWiseRecordDTO> getCategoryWiseTotal();
 
-    Page<FinancialRecordDTO> getRecentNActivities(Long limit);
+    List<FinancialRecordDTO> getRecentNActivities(Long limit);
+
 
     List<TrendsDTO> getTrends(TrendTypeEnum type, Integer maxLimit);
 }

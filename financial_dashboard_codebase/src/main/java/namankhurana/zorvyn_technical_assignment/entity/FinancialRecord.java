@@ -37,20 +37,21 @@ public class FinancialRecord {
     private RecordTypeEnum type;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "category")
+    @Column(name = "category",nullable = false)
     private CategoryEnum category;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "record_date")
+    @Column(name = "record_date",nullable = false)
     private LocalDate recordDate;
 
     @CreationTimestamp
     @Column(name = "created_at",updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "deleted")
+    @Column(name = "deleted",nullable = false)
+    @Builder.Default
     private Boolean deleted=false;
 
 }
