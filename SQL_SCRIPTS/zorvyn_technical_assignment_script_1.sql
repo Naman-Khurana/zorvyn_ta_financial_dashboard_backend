@@ -35,9 +35,8 @@ CREATE TABLE financial_records (
     category VARCHAR(100),
     record_date DATE NOT NULL,
 	description VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted BOOLEAN DEFAULT FALSE
 );
 
 INSERT INTO roles (name) VALUES
