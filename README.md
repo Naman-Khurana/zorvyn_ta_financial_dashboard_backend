@@ -1,6 +1,8 @@
-# Financial Dashboard — Backend
+# Financial Dashboard - Backend
 
 A RESTful API for managing financial records with role-based access control and dashboard analytics, built as part of the Zorvyn technical assignment for Backend Engineer Intern.
+
+- **API DOCUMENTATION** : [POSTMAN](https://documenter.getpostman.com/view/37348597/2sBXiqEoW2)
 
 ---
 ## Contents
